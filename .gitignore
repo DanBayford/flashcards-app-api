@@ -1,0 +1,47 @@
+# Build output
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# IDE (Rider / VS / VS Code)
+.idea/
+.vscode/
+*.DotSettings
+
+# Build artifacts
+project.lock.json
+project.fragment.lock.json
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Publish output
+/wwwroot/dist
+/wwwroot/lib
+
+# Secrets (don’t commit!)
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# Entity Framework migrations snapshot cache
+Migrations/**/*.Designer.cs
