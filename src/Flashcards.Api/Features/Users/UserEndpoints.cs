@@ -128,14 +128,7 @@ public static class UserEndpoints
         ApplicationDbContext db
         )
     {
-        var userId = userPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
-        
-        if (userId is null || !Guid.TryParse(userId, out var guid))
-        {
-            return Results.Unauthorized();
-        }
-        
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == guid);
+        var user = await AuthHelpers.GetUserFromToken(userPrincipal, db);
         if (user == null)
         {
             return Results.Unauthorized();
@@ -182,14 +175,7 @@ public static class UserEndpoints
      */
     private static async Task<IResult> LogOutAsync(ClaimsPrincipal userPrincipal, ApplicationDbContext db)
     {
-        var userId = userPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (userId is null || !Guid.TryParse(userId, out var guid))
-        {
-            return Results.Unauthorized();
-        }
-        
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == guid);
+        var user = await AuthHelpers.GetUserFromToken(userPrincipal, db);
         if (user == null)
         {
             return Results.Unauthorized();
@@ -211,15 +197,7 @@ public static class UserEndpoints
         IJwtTokenService tokenService
         )
     {
-        // Find user
-        var userId = userPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (userId is null || !Guid.TryParse(userId, out var guid))
-        {
-            return Results.Unauthorized();
-        }
-        
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == guid);
+        var user = await AuthHelpers.GetUserFromToken(userPrincipal, db);
         if (user == null)
         {
             return Results.Unauthorized();
@@ -266,7 +244,6 @@ public static class UserEndpoints
             RefreshToken: refreshToken,
             RefreshTokenExpiresAtUtc: user.RefreshTokenExpiresAtUtc
         );
-        
         
         return Results.Ok(response);
     }

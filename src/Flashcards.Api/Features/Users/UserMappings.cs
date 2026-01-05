@@ -1,6 +1,6 @@
 namespace Flashcards.Api.Features.Users;
 
-internal static class UserMappings
+public static class UserMappings
 {
     public static UserInfoDto ToDto(this User user)
     {

@@ -1,6 +1,7 @@
 using System.Text;
 using Flashcards.Api.Persistence;
 using Flashcards.Api.Common.Auth;
+using Flashcards.Api.Features.Categories;
 using Flashcards.Api.Features.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Version = "v1",
         Title = "Flashcards API",
-        Description = "An ASP.NET Core Web API for Flashcards.",
+        Description = "An ASP.NET Core Minimal API for Flashcards.",
     });
 }); 
 
@@ -97,8 +98,12 @@ app.UseAuthorization();
 // Register endpoints
 app.MapGet("/api/health", () => Results.Ok()).WithTags("Health");
 app.MapUserEndpoints();
+app.MapUserCategoryEndpoints();
 
 
 app.Run();
+
+// This allows the testApiFactory to find the Web App to inherit from in tests/TestApiFactory.cs
+public partial class Program { }
 
 
