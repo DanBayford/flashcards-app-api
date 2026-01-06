@@ -2,6 +2,7 @@ using System.Text;
 using Flashcards.Api.Persistence;
 using Flashcards.Api.Common.Auth;
 using Flashcards.Api.Features.Categories;
+using Flashcards.Api.Features.Questions;
 using Flashcards.Api.Features.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,9 @@ builder.Services
         };
     });
 
+// Register QuestionService
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -98,7 +102,8 @@ app.UseAuthorization();
 // Register endpoints
 app.MapGet("/api/health", () => Results.Ok()).WithTags("Health");
 app.MapUserEndpoints();
-app.MapUserCategoryEndpoints();
+app.MapCategoryEndpoints();
+app.MapQuestionEndpoints();
 
 
 app.Run();

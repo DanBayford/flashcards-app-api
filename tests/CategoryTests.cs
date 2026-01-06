@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using Flashcards.Api.Features.Categories;
 using Flashcards.Api.Features.Users;
-using Xunit;
 
 namespace tests;
 

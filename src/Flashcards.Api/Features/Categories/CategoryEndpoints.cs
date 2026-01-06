@@ -7,7 +7,7 @@ namespace Flashcards.Api.Features.Categories;
 
 public static class CategoryEndpoints
 {
-    public static IEndpointRouteBuilder MapUserCategoryEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapCategoryEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/category").WithTags("Category");
         

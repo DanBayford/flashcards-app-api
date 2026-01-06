@@ -6,7 +6,7 @@ namespace Flashcards.Api.Features.Questions;
 
 public class Question: IHasTimestamps
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
     
     public Guid UserId { get; set; } // FK
     public User User { get; set; } = null!; // Navigation property
@@ -24,16 +24,16 @@ public class Question: IHasTimestamps
      * EF core would infer M2M from List<Category> Categories,
      * but explicit join table QuestionCategory is more extensible later if required
      */
-    public ICollection<QuestionCategory> QuestionCategories { get; set; } = new List<QuestionCategory>();
+    public ICollection<QuestionCategory> QuestionCategories { get; init; } = new List<QuestionCategory>();
     
 }
 
 // Join table for Question <-> Category many-to-many relationships
 public class QuestionCategory
 {
-    public Guid QuestionId { get; set; } // FK
+    public Guid QuestionId { get; init; } // FK
     public Question Question { get; set; } = null!; // Navigation property
     
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId { get; init; }
     public Category Category { get; set; } = null!;
 }
