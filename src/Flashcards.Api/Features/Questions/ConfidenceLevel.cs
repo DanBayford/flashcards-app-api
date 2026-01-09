@@ -2,6 +2,7 @@ namespace Flashcards.Api.Features.Questions;
 
 public enum ConfidenceLevel
 {
+    None = 0,
     VeryLow = 1,
     Low = 2,
     Medium = 3,

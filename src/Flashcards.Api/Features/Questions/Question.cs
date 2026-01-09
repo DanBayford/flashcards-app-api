@@ -15,7 +15,7 @@ public class Question: IHasTimestamps
     public string? Hint { get; set; }
     public string Answer { get; set; } = null!;
     
-    public ConfidenceLevel Confidence { get; set; } = ConfidenceLevel.VeryLow;
+    public ConfidenceLevel Confidence { get; set; } = ConfidenceLevel.None; // ie 0
     
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }

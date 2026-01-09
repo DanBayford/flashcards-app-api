@@ -19,6 +19,7 @@ public static class QuestionEndpoints
         return app;
     }
 
+    // [TODO] - potentially paginate
     private static async Task<IResult> GetQuestionsAsync(
         ClaimsPrincipal userPrincipal,
         ApplicationDbContext db)
