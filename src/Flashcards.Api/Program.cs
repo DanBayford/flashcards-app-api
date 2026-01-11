@@ -65,6 +65,9 @@ builder.Services
         };
     });
 
+// Register CookieService (refresh tokens)
+builder.Services.AddSingleton<ICookieService, CookieService>();
+
 // Register QuestionService
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 

@@ -22,11 +22,12 @@ public static class UserEndpoints
     }
 
     private static async Task<IResult> RegisterAsync(
+        HttpContext context,
         RegisterRequest request,
         ApplicationDbContext db,
         IPasswordService passwordService,
-        IJwtTokenService tokenService
-        )
+        IJwtTokenService tokenService,
+        ICookieService cookieService)
     {
         // Check if email already exists - use of AsNoTracking as we will not be editing this entity if found (minor performance boost)
         var existing = await db.Users
@@ -70,57 +71,70 @@ public static class UserEndpoints
         await db.SaveChangesAsync();
 
         var response = new AuthResponse(
-            AccessToken: accessToken,
-            RefreshToken: refreshToken,
-            RefreshTokenExpiresAtUtc: user.RefreshTokenExpiresAtUtc
+            AccessToken: accessToken
         );
+        
+        // Add refresh token to cookie
+        context.Response.Cookies.Append(
+            "refresh_token",
+            refreshToken,
+            cookieService.RefreshCookies()
+            );
 
         return Results.Ok(response);
     }
-
+    
+    
     private static async Task<IResult> LoginAsync(
+        HttpContext context,
         LoginRequest request,
         ApplicationDbContext db,
         IPasswordService passwordService,
-        IJwtTokenService tokenService
-        )
+        IJwtTokenService tokenService,
+        ICookieService cookieService
+    )
     {
-     var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
      
-     // Check for existing user
-     if (user == null)
-     {
-         // Don't leak existing/non existing emails data
-         return Results.BadRequest(new { error = "Invalid credentials" });
-     }
+        // Check for existing user
+        if (user == null)
+        {
+            // Don't leak existing/non existing emails data
+            return Results.BadRequest(new { error = "Invalid credentials" });
+        }
 
-     // Confirm supplied password
-     var passwordOk = passwordService.VerifyPassword(
-         request.Password, 
-         user.PasswordHash, 
-         user.PasswordSalt
-         );
+        // Confirm supplied password
+        var passwordOk = passwordService.VerifyPassword(
+            request.Password, 
+            user.PasswordHash, 
+            user.PasswordSalt
+        );
      
-     if (!passwordOk)
-     {
-         return Results.BadRequest(new { error = "Invalid credentials" });
-     }
+        if (!passwordOk)
+        {
+            return Results.BadRequest(new { error = "Invalid credentials" });
+        }
      
-     // Create appropriate tokens and save to user table
-     var accessToken = tokenService.GenerateAccessToken(user);
-     var refreshToken = tokenService.GenerateRefreshToken();
-     user.RefreshToken = refreshToken;
-     user.RefreshTokenExpiresAtUtc = DateTime.UtcNow + tokenService.RefreshTokenLifetime;
-     await db.SaveChangesAsync();
+        // Create appropriate tokens and save to user table
+        var accessToken = tokenService.GenerateAccessToken(user);
+        var refreshToken = tokenService.GenerateRefreshToken();
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiresAtUtc = DateTime.UtcNow + tokenService.RefreshTokenLifetime;
+        await db.SaveChangesAsync();
 
-     // Generate response object
-     var response = new AuthResponse(
-         AccessToken: accessToken,
-         RefreshToken: refreshToken,
-         RefreshTokenExpiresAtUtc: user.RefreshTokenExpiresAtUtc
-         );
+        // Generate response object
+        var response = new AuthResponse(
+            AccessToken: accessToken
+        );
+        
+        // Add refresh token to cookie
+        context.Response.Cookies.Append(
+            "refresh_token",
+            refreshToken,
+            cookieService.RefreshCookies()
+            );
 
-     return Results.Ok(response);
+        return Results.Ok(response);
     }
 
     private static async Task<IResult> GetUserInfoAsync(
@@ -138,14 +152,26 @@ public static class UserEndpoints
         var response = user.ToDto();
         return Results.Ok(response);
     }
-
+    
+    
     private static async Task<IResult> RefreshTokenAsync(
+        HttpContext context,
         RefreshRequest request,
         ApplicationDbContext db,
-        IJwtTokenService tokenService)
+        IJwtTokenService tokenService,
+        ICookieService cookieService
+        )
     {
+        var token = context.Request.Cookies["refresh_token"];
+
+        if (string.IsNullOrEmpty(token))
+        {
+            return Results.BadRequest(new { error = "Invalid or expired refresh token" });
+        }
+        
+        Console.WriteLine($"Refresh: {token}");
+        var user = await db.Users.FirstOrDefaultAsync(u => u.RefreshToken == token);
         var now = DateTime.UtcNow;
-        var user = await db.Users.FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken);
 
         if (user == null || user.RefreshTokenExpiresAtUtc <= now)
         {
@@ -159,10 +185,13 @@ public static class UserEndpoints
         await db.SaveChangesAsync();
 
         var response = new AuthResponse(
-            AccessToken: accessToken,
-            RefreshToken: refreshToken,
-            RefreshTokenExpiresAtUtc: user.RefreshTokenExpiresAtUtc
+            AccessToken: accessToken
         );
+        
+        context.Response.Cookies.Append(
+            "refresh_token",
+            refreshToken,
+            cookieService.RefreshCookies());
         
         return Results.Ok(response);
     }
@@ -173,7 +202,13 @@ public static class UserEndpoints
      * Authorization: Bearer  header, validates the JWT,
      * and populates HttpContext.User (ClaimsPrincipal) with the token’s claims.
      */
-    private static async Task<IResult> LogOutAsync(ClaimsPrincipal userPrincipal, ApplicationDbContext db)
+    
+    private static async Task<IResult> LogOutAsync(
+        HttpContext context,
+        ClaimsPrincipal userPrincipal, 
+        ApplicationDbContext db,
+        ICookieService cookieService
+        )
     {
         var user = await AuthHelpers.GetUserFromToken(userPrincipal, db);
         if (user == null)
@@ -185,16 +220,24 @@ public static class UserEndpoints
         user.RefreshTokenExpiresAtUtc = DateTime.MinValue;
         
         await db.SaveChangesAsync();
+        
+        // Clear refresh cookie
+        context.Response.Cookies.Delete(
+            "refresh_token",
+            cookieService.RefreshCookies()
+            );
 
         return Results.NoContent();
     }
 
-    public static async Task<IResult> ChangePasswordAsync(
+    private static async Task<IResult> ChangePasswordAsync(
+        HttpContext context,
         ChangePasswordRequest request,
         ClaimsPrincipal userPrincipal,
         ApplicationDbContext db,
         IPasswordService passwordService,
-        IJwtTokenService tokenService
+        IJwtTokenService tokenService,
+        ICookieService cookieService
         )
     {
         var user = await AuthHelpers.GetUserFromToken(userPrincipal, db);
@@ -240,10 +283,13 @@ public static class UserEndpoints
         
         // Create response object with new tokens
         var response = new AuthResponse(
-            AccessToken: accessToken,
-            RefreshToken: refreshToken,
-            RefreshTokenExpiresAtUtc: user.RefreshTokenExpiresAtUtc
+            AccessToken: accessToken
         );
+        
+        context.Response.Cookies.Append(
+            "refresh_token",
+            refreshToken,
+            cookieService.RefreshCookies());
         
         return Results.Ok(response);
     }
