@@ -14,7 +14,7 @@ public static class UserEndpoints
         group.MapPost("/register", RegisterAsync);
         group.MapPost("/login", LoginAsync);
         group.MapGet("/me",  GetUserInfoAsync).RequireAuthorization();
-        group.MapPost("/refresh", RefreshTokenAsync).RequireAuthorization();
+        group.MapPost("/refresh", RefreshTokenAsync);
         group.MapPost("/logout", LogOutAsync).RequireAuthorization();
         group.MapPost("/password", ChangePasswordAsync).RequireAuthorization();
         
@@ -71,7 +71,8 @@ public static class UserEndpoints
         await db.SaveChangesAsync();
 
         var response = new AuthResponse(
-            AccessToken: accessToken
+            AccessToken: accessToken,
+            UserInfo: user.ToDto()
         );
         
         // Add refresh token to cookie
@@ -124,7 +125,8 @@ public static class UserEndpoints
 
         // Generate response object
         var response = new AuthResponse(
-            AccessToken: accessToken
+            AccessToken: accessToken,
+            UserInfo: user.ToDto()
         );
         
         // Add refresh token to cookie
@@ -169,7 +171,6 @@ public static class UserEndpoints
             return Results.BadRequest(new { error = "Invalid or expired refresh token" });
         }
         
-        Console.WriteLine($"Refresh: {token}");
         var user = await db.Users.FirstOrDefaultAsync(u => u.RefreshToken == token);
         var now = DateTime.UtcNow;
 
@@ -185,7 +186,8 @@ public static class UserEndpoints
         await db.SaveChangesAsync();
 
         var response = new AuthResponse(
-            AccessToken: accessToken
+            AccessToken: accessToken,
+            UserInfo: user.ToDto()
         );
         
         context.Response.Cookies.Append(
@@ -283,7 +285,8 @@ public static class UserEndpoints
         
         // Create response object with new tokens
         var response = new AuthResponse(
-            AccessToken: accessToken
+            AccessToken: accessToken,
+            UserInfo: user.ToDto()
         );
         
         context.Response.Cookies.Append(

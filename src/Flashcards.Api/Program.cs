@@ -68,6 +68,30 @@ builder.Services
 // Register CookieService (refresh tokens)
 builder.Services.AddSingleton<ICookieService, CookieService>();
 
+// Register CORS settings
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevCors", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:5173"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+
+    options.AddPolicy("ProdCors", policy =>
+    {
+        policy
+            .WithOrigins("https://flashcards.bayford.dev")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 // Register QuestionService
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 
@@ -104,6 +128,13 @@ app.UseAuthorization();
 
 // Force HTTPS
 // app.UseHttpsRedirection();
+
+// Enable CORS 
+app.UseCors(
+    app.Environment.IsDevelopment()
+        ? "DevCors"
+        : "ProdCors"
+);
 
 // Register endpoints
 app.MapGet("/api/health", () => Results.Ok()).WithTags("Health");

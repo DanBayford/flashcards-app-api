@@ -18,24 +18,48 @@ public static class QuestionEndpoints
 
         return app;
     }
-
-    // [TODO] - potentially paginate
+    
     private static async Task<IResult> GetQuestionsAsync(
         ClaimsPrincipal userPrincipal,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        int page = 1
+        )
     {
         var user = await AuthHelpers.GetUserFromToken(userPrincipal, db);
         if (user == null)
         {
             return Results.Unauthorized();
         }
+        
+        // Pagination config
+        int pageSize = 10;
+        page = Math.Max(page, 1);
 
-        var questions = await db.Questions
+        // Base query
+        var query = db.Questions
             .Where(q => q.UserId == user.Id)
+            .OrderByDescending(q => q.CreatedAtUtc);
+
+        var totalCount = await query.CountAsync();
+            
+        // Make DB call    
+        var questions = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(QuestionMappings.Project)
             .ToListAsync();
 
-        return Results.Ok(questions);
+        // Create response object to include pagination metadata
+        var response = new
+        {
+            questions,
+            page,
+            pageSize,
+            totalCount,
+            totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+        };
+
+        return Results.Ok(response);
     }
 
     private static async Task<IResult> CreateQuestionAsync(
