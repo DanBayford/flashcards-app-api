@@ -166,17 +166,19 @@ public static class UserEndpoints
     {
         var token = context.Request.Cookies["refresh_token"];
 
-        if (string.IsNullOrEmpty(token))
+        // No refresh token
+        if (string.IsNullOrEmpty(token)) 
         {
-            return Results.BadRequest(new { error = "Invalid or expired refresh token" });
+            return Results.Unauthorized();
         }
         
         var user = await db.Users.FirstOrDefaultAsync(u => u.RefreshToken == token);
         var now = DateTime.UtcNow;
 
+        // Token not associated with user or token expired
         if (user == null || user.RefreshTokenExpiresAtUtc <= now)
         {
-            return Results.BadRequest(new { error = "Invalid or expired refresh token" });
+            return Results.Unauthorized();
         }
         
         var accessToken = tokenService.GenerateAccessToken(user);

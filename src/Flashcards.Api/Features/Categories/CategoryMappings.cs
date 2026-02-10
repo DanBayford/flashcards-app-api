@@ -11,6 +11,7 @@ public static class CategoryMappings
         {
             Id = category.Id,
             Name = category.Name,
+            QuestionCount = category.QuestionCategories.Count(cq => cq.Question.UserId == category.UserId),
         };
     }
 
@@ -31,10 +32,12 @@ public static class CategoryMappings
         category.Name = dto.Name;
     }
 
-    public static readonly Expression<Func<Category, CategoryDto>> Project = c =>
+    public static Expression<Func<Category, CategoryDto>> Project => category =>
         new CategoryDto
         {
-            Id = c.Id,
-            Name = c.Name
+            Id = category.Id,
+            Name = category.Name,
+            // Annotation to count number of questions user has on each category
+            QuestionCount = category.QuestionCategories.Count(qc => qc.Question.UserId == category.UserId),
         };
 }

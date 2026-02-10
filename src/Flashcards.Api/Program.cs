@@ -79,16 +79,7 @@ builder.Services.AddCors(options =>
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials();
-    });
-
-    options.AddPolicy("ProdCors", policy =>
-    {
-        policy
-            .WithOrigins("https://flashcards.bayford.dev")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowCredentials(); // For refresh token in cookie
     });
 });
 
@@ -122,19 +113,15 @@ if (app.Environment.IsDevelopment())
     }); 
 }
 
+// Enable CORS in dev for Vite dev server
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("DevCors");
+}
+
 // Enable auth
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Force HTTPS
-// app.UseHttpsRedirection();
-
-// Enable CORS 
-app.UseCors(
-    app.Environment.IsDevelopment()
-        ? "DevCors"
-        : "ProdCors"
-);
 
 // Register endpoints
 app.MapGet("/api/health", () => Results.Ok()).WithTags("Health");

@@ -4,6 +4,7 @@ public sealed record CategoryDto
 {
     public Guid Id { get; init; }
     public required string Name { get; init; }
+    public required int QuestionCount { get; init; }
 }
 
 public sealed record CreateCategoryDto

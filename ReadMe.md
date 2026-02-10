@@ -79,3 +79,50 @@ dotnet ef database update
 
 There is an extra console app ``Data.Reset`` that can be used to reset the test user `dan@flashcards.com` 
 
+## DB Schema
+
+```dbml
+Table users {
+  Id guid [pk]
+  Email varchar
+  PasswordHash varchar
+  PasswordSalt varchar
+  RefreshToken varchar
+  RefreshTokenExpiresAtUtc datetime
+  CreatedAtUtc datetime
+  UpdatedAtUtc datetime
+}
+
+Table questions {
+  Id guid [pk]
+  UserId guid [ref: > users.Id]
+  Prompt varchar
+  Hint varchar [null]
+  Answer varchar
+  Confidencelevel ConfidenceLevel
+  CreatedAtUtc datetime
+  UpdatedAtUtc datetime
+}
+
+Table categories {
+  Id guid [pk]
+  UserId guid [ref: > users.Id]
+  Name varchar
+  CreatedAtUtc datetime
+  UpdatedAtUtc datetime
+}
+
+Table question_categories {
+  QuestionId guid [ref: > questions.Id]
+  CategoryId guid [ref: > categories.Id]
+}
+
+Enum ConfidenceLevel {
+  None
+  VeryLow
+  Low
+  Medium
+  High
+  VeryHigh
+}
+```

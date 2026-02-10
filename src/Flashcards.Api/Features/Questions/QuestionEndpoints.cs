@@ -22,6 +22,8 @@ public static class QuestionEndpoints
     private static async Task<IResult> GetQuestionsAsync(
         ClaimsPrincipal userPrincipal,
         ApplicationDbContext db,
+        Guid[]? categoryId,
+        bool hideMastered = false,
         int page = 1
         )
     {
@@ -32,13 +34,25 @@ public static class QuestionEndpoints
         }
         
         // Pagination config
-        int pageSize = 10;
+        int pageSize = 12;
         page = Math.Max(page, 1);
 
         // Base query
         var query = db.Questions
-            .Where(q => q.UserId == user.Id)
-            .OrderByDescending(q => q.CreatedAtUtc);
+            .Where(q => q.UserId == user.Id);
+
+        // Create empty category array if not in params
+        categoryId ??= Array.Empty<Guid>();
+        
+        if (categoryId.Length > 0)
+        {
+            query = query.Where(q => q.QuestionCategories.Any(qc => categoryId.Contains(qc.CategoryId)));
+        }
+
+        if (hideMastered)
+        {
+            query = query.Where(q => q.Confidence < ConfidenceLevel.Low);
+        }
 
         var totalCount = await query.CountAsync();
             
@@ -46,6 +60,7 @@ public static class QuestionEndpoints
         var questions = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .OrderByDescending(q => q.CreatedAtUtc) // Order after manipulating IQueryable
             .Select(QuestionMappings.Project)
             .ToListAsync();
 
