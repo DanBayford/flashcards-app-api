@@ -3,61 +3,33 @@
 A minimal API for a study flashcards application
 
 ## Entities
-
-### Users
-
-### Questions
-
-### Categories
+- Users
+- Questions
+- Categories
 
 ## Endpoints
-
-## Services
+- GET `/api/category`
+- GET `/api/category/:id`
+- POST `/api/category`
+- PUT `/api/category/:id`
+- DELETE `/api/category/:id`
+- GET `/api/question`
+- GET `/api/question/:id`
+- POST `/api/question`
+- PUT `/api/question/:id`
+- DELETE `/api/question/:id`
+- POST `/api/quiz/generate`
+- POST `/api/quiz/update`
+- POST '/api/user/register'
+- POST '/api/user/login'
+- GET '/api/user/me'
+- POST '/api/user/refresh'
+- POST '/api/user/logout'
+- POST '/api/user/password'
 
 ## Authentication
 - JWT auth
 - Refresh tokens
-
-##  Directory Structure
-```
-api
-| Flashcards.sln
-| - src
-|   |- Flashcards.Api
-|       |- Flashcards.Api.csproj
-|       |- Program.cs (entrypoint)
-|       |- appsettings.json
-|       |- appsettings.Development.json
-|       |- Features
-|       |   |- Users
-|       |   |   |- User.cs, UserDtos.cs, UserMappings.cs, UserEndpoints.cs, etc
-|       |   |- Categories
-|       |   |   |- Category.cs, CategoryDtos.cs, CategoryMapping.cs, CategoryEndpoints.cs, etc
-|       |   |- Questions
-|       |   |   |- Question.cs, QuestionDtos.cs, QuestionMappings.cs, ConfidenceLevel.cs, QuesiontsEndpont.cs, etc
-|       |   |- Quizzes
-|       |   |   |- QuizDtos.cs, QuizEndpoints.cs, QuizService.cs, etc       
-|       |- Auth
-|       |   |- JWTTokenService.cs, etc
-|       |- Persistence
-|       |   |- ApplicationDbContext.cs
-|       |   |- EntityConfigurations
-|       |   |   |- UserConfiguration.cs, CategoryConfiguration.cs, QuestionConfiguration.cs, RefreshTokenConfiguration.cs
-|       |   |- Migrations
-|       |- Common
-|           |- Errors
-|           |   |- ApiError.cs, ErrorMiddleware.cs 
-|           |- Logging
-|               |- LoggingExtensions.cs
-| - tests
-|   |- tests.csproj
-|   |- Users
-|   |   |- UserEndpointsTest.cs
-|   |   |- UserServiceTests.cs
-|   |- Quesions
-|       |- QuesionEndpointsTest.cs
-...etc
-```
 
 ## Persistence
 
