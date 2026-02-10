@@ -7,14 +7,20 @@ COPY *.sln ./
 COPY src/Flashcards.Api/*.csproj src/Flashcards.Api/
 COPY src/Data.Reset/*.csproj src/Data.Reset/
 
+# Install required Nuget packages
 RUN dotnet restore src/Flashcards.Api/Flashcards.Api.csproj
 
 # Copy the rest of the source
 COPY . .
 
-# Publish ONLY the API project
+# Publish the API project
 RUN dotnet publish src/Flashcards.Api/Flashcards.Api.csproj \
-  -c Release -o /out /p:UseAppHost=false
+  -c Release -o /out/api /p:UseAppHost=false
+
+# Publish reset tool
+RUN dotnet publish src/Data.Reset/Data.Reset.csproj \
+  -c Release -o /out/reset /p:UseAppHost=false
+
 
 # Runtime layer 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
@@ -28,5 +34,9 @@ RUN apt-get update \
 ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000
 
-COPY --from=build /out ./
+# API binaries in /app
+COPY --from=build /out/api ./
+# Reset binaries in /app/reset
+COPY --from=build /out/reset ./reset/
+
 ENTRYPOINT ["dotnet", "Flashcards.Api.dll"]

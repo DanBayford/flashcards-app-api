@@ -10,6 +10,10 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        var environment =
+            Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+            ?? Environments.Production;
+        var isDevelopment = environment == Environments.Development;
         /*
          * Create an instance of the web app inc:
          *  - config
@@ -25,7 +29,11 @@ public class Program
             {
                 // Add DBContext
                 var basePath = AppContext.BaseDirectory;
-                var dbPath = Path.Combine(basePath, "..", "..", "..", "..", "Flashcards.Api", "Persistence", "Flashcards.db");
+
+                var dbPath = isDevelopment
+                    ? Path.Combine(basePath, "..", "..", "..", "..", "Flashcards.Api", "Persistence", "Flashcards.db")
+                    : Path.Combine(basePath, "..", "data", "Flashcards.db");
+                
                 var connectionString = $"Data Source={dbPath}";
 
                 services.AddDbContext<ApplicationDbContext>(options =>
